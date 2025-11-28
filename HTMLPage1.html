@@ -1,0 +1,185 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>샤픽(Shapic) - 대학생 프리미엄 매칭</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <style>
+        /* 1. 전체 기본 세팅 (폰트 및 배경) */
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* 2. 앱 화면 같은 컨테이너 디자인 */
+        .app-container {
+            width: 100%;
+            max-width: 420px; /* 모바일 앱 너비와 비슷하게 */
+            background-color: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 3. 상단 헤더 (메인 타이틀) */
+        .header {
+            padding: 40px 20px;
+            text-align: center;
+            /* 고급스러운 그라데이션 배경 */
+            background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 99%, #FECFEF 100%);
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            font-size: 15px;
+            opacity: 0.9;
+            margin-top: 5px;
+            font-weight: 400;
+        }
+
+        /* 4. 콘텐츠 영역 */
+        .content {
+            padding: 0 25px;
+        }
+
+        /* 카드형 디자인 */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            /* 부드러운 그림자 효과 */
+            box-shadow: 0 10px 25px rgba(194, 194, 194, 0.15);
+            border: 1px solid #f0f0f0;
+            transition: transform 0.2s;
+        }
+
+            .card:hover {
+                transform: translateY(-5px); /* 마우스를 올리면 살짝 떠오름 */
+            }
+
+        .emoji-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 10px 0 5px;
+            color: #2d3436;
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: #636e72;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* 5. 하단 고정 버튼 (CTA) */
+        .bottom-btn-area {
+            position: fixed;
+            bottom: 0;
+            max-width: 420px;
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(to top, white 80%, transparent);
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .cta-button {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 16px;
+            background: linear-gradient(90deg, #ff758c 0%, #ff7eb3 100%);
+            color: white;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 117, 140, 0.4);
+            transition: opacity 0.2s;
+        }
+
+            .cta-button:active {
+                opacity: 0.9;
+                transform: scale(0.98);
+            }
+
+        /* 구분선 */
+        .divider {
+            height: 1px;
+            background-color: #eee;
+            margin: 30px 0;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header class="header">
+            <h1 class="logo">Shapic</h1>
+            <p class="subtitle">대학생만을 위한 프리미엄 매칭</p>
+        </header>
+
+        <div class="content">
+            <div class="card">
+                <span class="emoji-icon">🎓</span>
+                <h3 class="card-title">확실한 학교 인증</h3>
+                <p class="card-desc">아무나 가입할 수 없어요.<br>학생증과 학교 메일로 철저히 검증합니다.</p>
+            </div>
+
+            <div class="card">
+                <span class="emoji-icon">💌</span>
+                <h3 class="card-title">설레는 하루 매칭</h3>
+                <p class="card-desc">매일 밤 10시,<br>오늘의 인연 3명이 도착합니다.</p>
+            </div>
+
+            <div class="card">
+                <span class="emoji-icon">🤫</span>
+                <h3 class="card-title">지인 만남 차단</h3>
+                <p class="card-desc">같은 학교, 같은 과가 부담스럽다면?<br>설정에서 자유롭게 피할 수 있어요.</p>
+            </div>
+
+            <div style="height: 100px;"></div>
+        </div>
+
+        <div class="bottom-btn-area">
+            <button class="cta-button" onclick="startApp()">
+                3초만에 시작하기
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function startApp() {
+            // signup.html 파일로 이동해라! 라는 명령어입니다.
+            window.location.href = 'signup.html';
+        }
+    </script>
+</body>
+</html>
