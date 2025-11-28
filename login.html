@@ -1,0 +1,147 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>샤픽 - 로그인</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            background-color: white;
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        .logo-area {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 800;
+            color: #ff758c;
+            margin: 0;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #888;
+            margin-top: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 15px;
+            box-sizing: border-box;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 18px;
+            background: #ff758c;
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .signup-btn {
+            width: 100%;
+            padding: 18px;
+            background: white;
+            color: #555;
+            border: 1px solid #ddd;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="logo-area">
+            <h1 class="logo">Shapic</h1>
+            <p class="subtitle">대학생을 위한 프리미엄 매칭</p>
+        </div>
+
+        <div class="input-group">
+            <input type="email" id="email" placeholder="이메일 입력 (ID)">
+        </div>
+        <div class="input-group">
+            <input type="password" id="password" placeholder="비밀번호 입력">
+        </div>
+
+        <button class="login-btn" onclick="login()">로그인</button>
+        <button class="signup-btn" onclick="location.href='signup.html'">회원가입 하기</button>
+
+        <p class="footer">비밀번호를 잊으셨나요?</p>
+    </div>
+
+    <script>
+        const PROJECT_URL = 'https://gmzvbgkxwzadpndeostq.supabase.co';
+        const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtenZiZ2t4d3phZHBuZGVvc3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyOTM3NTIsImV4cCI6MjA3OTg2OTc1Mn0.9VfVKumfVOPYDrwKvd4lyKjeUnKfGD5Z4v7k-Wfj140';
+        const supabase = window.supabase.createClient(PROJECT_URL, API_KEY);
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                alert("이메일과 비밀번호를 입력해주세요.");
+                return;
+            }
+
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                alert("로그인 실패! 이메일이나 비밀번호를 확인해주세요.");
+                console.error(error);
+            } else {
+                localStorage.setItem('my_id', data.user.id);
+                alert("반갑습니다! 매칭 화면으로 이동합니다.");
+                location.href = 'matching.html';
+            }
+        }
+    </script>
+</body>
+</html>

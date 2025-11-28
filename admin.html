@@ -1,0 +1,234 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>샤픽 - 관리자 모드</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .user-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .user-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+        }
+
+        .user-info p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        /* 대기중 - 노랑 */
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        /* 활동중 - 초록 */
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-approve {
+            background: #4dabf7;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background: #339af0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>👑 샤픽 관리자 페이지</h1>
+        <p style="text-align:center; color:#666; margin-bottom: 30px;">
+            가입 대기 중인 회원을 승인해주세요.
+        </p>
+
+        <div id="user-list">
+            <p style="text-align:center; color: #888;">
+                ⏳ 데이터를 불러오는 중입니다...<br>
+                (잠시만 기다려주세요)
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // -----------------------------------------------------------
+        // [필수] signup.html 에 있는 키를 복사해서 넣어주세요!
+        // -----------------------------------------------------------
+        const PROJECT_URL = 'https://gmzvbgkxwzadpndeostq.supabase.co';
+        const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtenZiZ2t4d3phZHBuZGVvc3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyOTM3NTIsImV4cCI6MjA3OTg2OTc1Mn0.9VfVKumfVOPYDrwKvd4lyKjeUnKfGD5Z4v7k-Wfj140';
+        // -----------------------------------------------------------
+
+        const supabase = window.supabase.createClient(PROJECT_URL, API_KEY);
+
+        // 1. 관리자 암호 체크
+        // (귀찮으시면 테스트할 땐 주석 처리(//) 하셔도 됩니다)
+        const password = prompt("관리자 비밀번호를 입력하세요 (설정: 1234):");
+        if (password !== "1234") {
+            alert("접근 권한이 없습니다.");
+            location.href = 'matching.html';
+        } else {
+            fetchUsers(); // 비번 맞으면 데이터 로드 시작
+        }
+
+        // 2. 모든 회원 불러오기
+        async function fetchUsers() {
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .order('created_at', { ascending: false }); // 최신 가입순
+
+                if (error) {
+                    console.error(error);
+                    document.getElementById('user-list').innerHTML =
+                        `<p style="color:red; text-align:center;">🚨 불러오기 실패!<br>${error.message}</p>`;
+                    return;
+                }
+
+                if (!data || data.length === 0) {
+                    document.getElementById('user-list').innerHTML =
+                        `<p style="text-align:center;">📂 가입한 회원이 0명입니다.</p>`;
+                    return;
+                }
+
+                // 데이터가 있으면 그리기 시작
+                renderUsers(data);
+
+            } catch (err) {
+                alert("알 수 없는 오류: " + err);
+            }
+        }
+
+        // 3. 화면 그리기
+        function renderUsers(users) {
+            const list = document.getElementById('user-list');
+            list.innerHTML = ''; // "로딩중..." 글자 지우기
+
+            users.forEach(user => {
+                // status가 없으면 'pending'으로 취급
+                const currentStatus = user.status || 'pending';
+                const statusClass = currentStatus === 'active' ? 'status-active' : 'status-pending';
+                const statusText = currentStatus === 'active' ? '✅ 승인됨' : '⏳ 승인 대기중';
+
+                const card = document.createElement('div');
+                card.className = 'user-card';
+                card.innerHTML = `
+                        <div class="user-info">
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                            <h3>${user.nickname} (${user.gender})</h3>
+                            <p>${user.university} · ${user.mbti}</p>
+                            <p style="font-size:12px; color:#999; margin-top:4px;">
+                                ${user.keywords ? user.keywords : '키워드 없음'}
+                            </p>
+                            <p style="font-size:11px; color:#aaa;">ID: ${user.email || '이메일 정보 없음'}</p>
+                        </div>
+                        <div class="btn-group">
+                            ${currentStatus !== 'active' ?
+                        `<button class="btn-approve" onclick="approveUser('${user.id}')">승인</button>` :
+                        `<button style="background:#ccc; cursor:default;">승인됨</button>`
+                    }
+                            <button class="btn-delete" onclick="deleteUser('${user.id}')">삭제</button>
+                        </div>
+                    `;
+                list.appendChild(card);
+            });
+        }
+
+        // 4. 승인 기능
+        async function approveUser(userId) {
+            if (!confirm("이 회원을 승인하시겠습니까?")) return;
+
+            const { error } = await supabase
+                .from('users')
+                .update({ status: 'active' }) // 상태를 active로 변경
+                .eq('id', userId);
+
+            if (error) alert("승인 실패: " + error.message);
+            else {
+                alert("승인 완료! 이제 매칭 화면에 나타납니다.");
+                fetchUsers(); // 목록 새로고침
+            }
+        }
+
+        // 5. 삭제 기능
+        async function deleteUser(userId) {
+            if (!confirm("정말 삭제하시겠습니까? (복구 불가)")) return;
+
+            // (1) DB에서 프로필 삭제
+            const { error } = await supabase
+                .from('users')
+                .delete()
+                .eq('id', userId);
+
+            // (참고: Auth 계정 삭제는 여기서 안 되고 수퍼베이스 대시보드에서 해야 완벽함)
+
+            if (error) alert("삭제 실패: " + error.message);
+            else {
+                alert("삭제되었습니다.");
+                fetchUsers(); // 목록 새로고침
+            }
+        }
+    </script>
+</body>
+</html>
