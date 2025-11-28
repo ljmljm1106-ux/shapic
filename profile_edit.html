@@ -1,0 +1,510 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>샤픽 - 프로필 수정</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* 스타일 통일화 */
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            background-color: white;
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+            .header h1 {
+                font-size: 18px;
+                font-weight: 700;
+                margin: 0;
+            }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #555;
+            cursor: pointer;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+            padding-bottom: 100px;
+        }
+
+        .profile-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ff758c;
+            margin: 10px 0 15px;
+            border-left: 4px solid #ff758c;
+            padding-left: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        /* 폰트 일관성을 위해 textarea에도 Pretendard 적용 */
+        input[type="text"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+            font-family: 'Pretendard', sans-serif; /* 폰트 통일 */
+            color: #333;
+        }
+
+        textarea {
+            resize: vertical;
+            height: 100px;
+        }
+
+        /* 성별 필드: 수정 불가 */
+        input[disabled] {
+            background-color: #e9ecef !important;
+            color: #888 !important;
+            cursor: not-allowed;
+        }
+
+        /* 검색 결과 리스트 */
+        .search-suggestions {
+            position: absolute;
+            top: 75px;
+            left: 0;
+            width: 100%;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 100;
+        }
+
+        .search-item {
+            padding: 14px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+            .search-item:hover {
+                background-color: #fff0f6;
+                color: #ff758c;
+            }
+
+        /* 키워드 태그 스타일 (signup과 동일) */
+        .keyword-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 10px;
+            background: white;
+        }
+
+        .tag-item {
+            padding: 8px 16px;
+            border: 1px solid #eee;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            background: #fafafa;
+            transition: 0.2s;
+        }
+
+            .tag-item.active {
+                background-color: #ff758c;
+                color: white;
+                border-color: #ff758c;
+                font-weight: bold;
+            }
+
+        /* 하단 저장 버튼 */
+        .bottom-area {
+            padding: 20px 25px;
+            border-top: 1px solid #eee;
+            background: white;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 420px;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+
+        .save-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(90deg, #ff758c 0%, #ff7eb3 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .radio-selector {
+            display: flex;
+            gap: 8px;
+        }
+
+        .radio-label {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            color: #888;
+            font-size: 14px;
+        }
+
+        input[type="radio"] {
+            display: none;
+        }
+
+            input[type="radio"]:checked + .radio-label {
+                background-color: #FFF0F3;
+                border-color: #ff758c;
+                color: #ff758c;
+                font-weight: bold;
+            }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header class="header">
+            <button onclick="location.href='mypage.html'" class="back-btn">&lt;</button>
+            <h1>프로필 수정</h1>
+            <span style="width:24px;"></span>
+        </header>
+
+        <div class="content">
+            <div class="section-header">기본 정보</div>
+
+            <div class="form-group">
+                <label>닉네임</label>
+                <input type="text" id="nickname" maxlength="10">
+            </div>
+
+            <div class="form-group">
+                <label>성별 (수정 불가)</label>
+                <input type="text" id="gender" disabled>
+            </div>
+
+            <div class="form-group">
+                <label>출생년도</label>
+                <select id="birth_year" class="text-input">
+                    <option value="">선택해주세요</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>학교 (검색 가능)</label>
+                <input type="text" id="university" onkeyup="filterSearch('univ')">
+                <div class="search-suggestions" id="univ-list-box"></div>
+            </div>
+
+            <div class="form-group">
+                <label>거주 지역 (검색 가능)</label>
+                <input type="text" id="residence" onkeyup="filterSearch('residence')">
+                <div class="search-suggestions" id="residence-list-box"></div>
+            </div>
+
+            <div class="profile-section">
+                <hr style="border: 0; height: 1px; background: #eee; margin: 20px 0;">
+                <div class="section-title">상세 정보</div>
+
+                <div class="form-group">
+                    <label>MBTI</label>
+                    <select id="mbti">
+                        <option value="">선택해주세요</option>
+                        <option value="INTJ">INTJ</option>
+                        <option value="INTP">INTP</option>
+                        <option value="ENTJ">ENTJ</option>
+                        <option value="ENTP">ENTP</option>
+                        <option value="INFJ">INFJ</option>
+                        <option value="INFP">INFP</option>
+                        <option value="ENFJ">ENFJ</option>
+                        <option value="ENFP">ENFP</option>
+                        <option value="ISTJ">ISTJ</option>
+                        <option value="ISFJ">ISFJ</option>
+                        <option value="ESTJ">ESTJ</option>
+                        <option value="ESFJ">ESFJ</option>
+                        <option value="ISTP">ISTP</option>
+                        <option value="ISFP">ISFP</option>
+                        <option value="ESTP">ESTP</option>
+                        <option value="ESFP">ESFP</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>눈매</label>
+                    <div class="radio-selector">
+                        <label style="flex:1;"><input type="radio" name="eyelid" value="유쌍"><div class="radio-label">유쌍</div></label>
+                        <label style="flex:1;"><input type="radio" name="eyelid" value="무쌍"><div class="radio-label">무쌍</div></label>
+                        <label style="flex:1;"><input type="radio" name="eyelid" value="속쌍"><div class="radio-label">속쌍</div></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>종교</label>
+                    <select id="religion">
+                        <option value="">선택해주세요</option>
+                        <option value="무교">무교</option>
+                        <option value="기독교">기독교</option>
+                        <option value="천주교">천주교</option>
+                        <option value="불교">불교</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>연락 수단</label>
+                    <div class="radio-selector">
+                        <label style="flex:1;"><input type="radio" name="contact_style" value="카톡"><div class="radio-label">카톡</div></label>
+                        <label style="flex:1;"><input type="radio" name="contact_style" value="전화"><div class="radio-label">전화</div></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>키워드 (터치하여 수정)</label>
+                    <div class="keyword-container" id="keyword-box">
+                        <div class="tag-item" onclick="toggleTag(this)">#운동좋아</div><div class="tag-item" onclick="toggleTag(this)">#맛집탐방</div>
+                        <div class="tag-item" onclick="toggleTag(this)">#술좋아함</div><div class="tag-item" onclick="toggleTag(this)">#술안마심</div>
+                        <div class="tag-item" onclick="toggleTag(this)">#비흡연</div><div class="tag-item" onclick="toggleTag(this)">#반려동물</div>
+                        <div class="tag-item" onclick="toggleTag(this)">#집순이</div><div class="tag-item" onclick="toggleTag(this)">#여행러버</div>
+                        <div class="tag-item" onclick="toggleTag(this)">#연락잘됨</div><div class="tag-item" onclick="toggleTag(this)">#애교많음</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label style="color:#3b1e1e;">카카오톡 ID</label>
+                    <input type="text" id="kakao_id" style="border: 2px solid #ffeeb0;">
+                    <p style="font-size:12px; color:#888; margin-top:5px;">요청한 상대방이 수락 시 오픈됩니다.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>자기소개 (최소 10자 ~ 최대 300자)</label>
+                    <textarea id="bio" maxlength="300" placeholder="자신의 매력을 자유롭게 표현해주세요!"></textarea>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="bottom-area">
+            <button class="save-button" onclick="saveProfile()">프로필 저장하기</button>
+        </div>
+    </div>
+
+    <script>
+        // -----------------------------------------------------------
+        // [필수] 키 값 입력
+        // -----------------------------------------------------------
+        const PROJECT_URL = 'https://gmzvbgkxwzadpndeostq.supabase.co';
+        const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtenZiZ2t4d3phZHBuZGVvc3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyOTM3NTIsImV4cCI6MjA3OTg2OTc1Mn0.9VfVKumfVOPYDrwKvd4lyKjeUnKfGD5Z4v7k-Wfj140';
+        // -----------------------------------------------------------
+
+        const supabase = window.supabase.createClient(PROJECT_URL, API_KEY);
+        let myId = null;
+        let selectedKeywords = [];
+
+        // --- 1. 데이터 리스트 ---
+        const CURRENT_YEAR = new Date().getFullYear();
+        const MAX_AGE_YEAR = CURRENT_YEAR - 20;
+        const MIN_AGE_YEAR = CURRENT_YEAR - 32;
+
+        const universities = ["가천대학교", "고려대학교", "서울대학교", "연세대학교", "한양대학교", "중앙대학교", "경희대학교", "국민대학교"];
+        const residences = ["서울특별시 종로구", "서울특별시 중구", "서울특별시 용산구", "서울특별시 성동구", "서울특별시 강남구", "부산광역시 중구", "대구광역시 중구", "인천광역시 중구", "광주광역시 동구", "대전광역시 동구", "울산광역시 중구", "세종특별자치시", "경기도 수원시", "강원특별자치도 춘천시", "충청북도 청주시", "충청남도 천안시", "전북특별자치도 전주시", "전라남도 목포시", "경상북도 포항시", "경상남도 창원시", "제주특별자치도 제주시"];
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            populateBirthYears();
+            loadMyInfo();
+        });
+
+        function populateBirthYears() {
+            const select = document.getElementById('birth_year');
+            for (let year = MAX_AGE_YEAR; year >= MIN_AGE_YEAR; year--) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.text = year + '년생';
+                select.appendChild(option);
+            }
+        }
+
+        // --- 2. 정보 불러오기 (DB -> Form) ---
+        async function loadMyInfo() {
+            myId = localStorage.getItem('my_id');
+            if (!myId) {
+                alert("로그인 세션이 만료되었습니다. 다시 로그인해주세요.");
+                location.href = 'login.html';
+                return;
+            }
+
+            const { data: me, error } = await supabase.from('users').select('*').eq('id', myId).single();
+
+            if (me) {
+                // 1. 기본 필드 채우기
+                document.getElementById('nickname').value = me.nickname;
+                document.getElementById('gender').value = me.gender; // 성별 (disabled)
+                document.getElementById('birth_year').value = me.birth_year;
+                document.getElementById('university').value = me.university;
+                document.getElementById('residence').value = me.residence;
+                document.getElementById('mbti').value = me.mbti;
+                document.getElementById('bio').value = me.bio || '';
+                document.getElementById('kakao_id').value = me.kakao_id || '';
+                document.getElementById('religion').value = me.religion || '';
+
+                // 2. 라디오 버튼 체크 (눈매/연락수단)
+                if (me.eyelid) document.querySelector(`input[name="eyelid"][value="${me.eyelid}"]`)?.checked = true;
+                if (me.contact_style) document.querySelector(`input[name="contact_style"][value="${me.contact_style}"]`)?.checked = true;
+
+                // 3. 키워드 태그 활성화
+                if (me.keywords) {
+                    selectedKeywords = me.keywords.split(',');
+                    document.querySelectorAll('.tag-item').forEach(tag => {
+                        if (selectedKeywords.includes(tag.innerText)) {
+                            tag.classList.add('active');
+                        }
+                    });
+                }
+            } else if (error && error.code !== 'PGRST116') {
+                alert("데이터 로드 중 오류가 발생했습니다: " + error.message);
+                console.error(error);
+            }
+        }
+
+
+        // --- 3. 수정 저장하기 ---
+        async function saveProfile() {
+            // [참고] gender는 disabled라 input에서 읽어옵니다.
+            const data = {
+                nickname: document.getElementById('nickname').value.trim(),
+                birth_year: document.getElementById('birth_year').value,
+                university: document.getElementById('university').value.trim(),
+                residence: document.getElementById('residence').value.trim(),
+                mbti: document.getElementById('mbti').value,
+                bio: document.getElementById('bio').value.trim(),
+                religion: document.getElementById('religion').value,
+                kakao_id: document.getElementById('kakao_id').value.trim(),
+
+                // 라디오 값들
+                eyelid: document.querySelector('input[name="eyelid"]:checked')?.value,
+                contact_style: document.querySelector('input[name="contact_style"]:checked')?.value,
+
+                // 키워드
+                keywords: selectedKeywords.join(',')
+            };
+
+            // --- 유효성 검사 ---
+            if (!data.nickname || !data.birth_year || !data.university || !data.residence || !data.mbti || !data.eyelid || !data.religion || !data.contact_style || !data.kakao_id || !data.bio) {
+                alert('🚨 모든 필수 정보를 빠짐없이 입력해주세요!');
+                return;
+            }
+            if (data.bio.length < 10) { alert('🚨 자기소개는 최소 10자 이상 작성해주세요.'); return; }
+            if (selectedKeywords.length < 3) { alert('🚨 키워드를 3개 이상 선택해주세요!'); return; }
+
+
+            const { error } = await supabase
+                .from('users')
+                .update(data)
+                .eq('id', myId);
+
+            if (error) {
+                console.error(error);
+                alert("저장 실패: " + error.message);
+            } else {
+                alert("수정되었습니다!");
+                location.href = 'mypage.html';
+            }
+        }
+
+
+        // --- 4. 기타 UI 로직 (검색/태그) ---
+        function toggleTag(element) {
+            const text = element.innerText;
+            if (selectedKeywords.includes(text)) {
+                selectedKeywords = selectedKeywords.filter(k => k !== text);
+                element.classList.remove('active');
+            } else {
+                selectedKeywords.push(text);
+                element.classList.add('active');
+            }
+        }
+
+        function filterSearch(type) {
+            const isUniv = type === 'univ';
+            const inputId = isUniv ? 'university' : 'residence';
+            const listBoxId = isUniv ? 'univ-list-box' : 'residence-list-box';
+            const sourceList = isUniv ? universities : residences;
+
+            const input = document.getElementById(inputId).value;
+            const listBox = document.getElementById(listBoxId);
+
+            if (input.length < 1) { listBox.style.display = 'none'; return; }
+
+            const filtered = sourceList.filter(item => item.includes(input));
+
+            if (filtered.length > 0) {
+                listBox.style.display = 'block';
+                listBox.innerHTML = '';
+                filtered.slice(0, 10).forEach(item => {
+                    const div = document.createElement('div'); div.className = 'search-item'; div.innerText = item;
+                    div.onclick = function () { document.getElementById(inputId).value = item; listBox.style.display = 'none'; };
+                    listBox.appendChild(div);
+                });
+            } else { listBox.style.display = 'none'; }
+        }
+    </script>
+</body>
+</html>
